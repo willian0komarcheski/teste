@@ -3,6 +3,8 @@
 # Use uma imagem base oficial do Python
 FROM python:3.11-slim
 
+RUN apt-get update && apt-get install -y curl
+
 # Defina o diretório de trabalho
 WORKDIR /app
 

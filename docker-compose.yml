@@ -21,7 +21,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 60s
 
   redis:
     image: redis:latest
@@ -38,6 +38,7 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+      start_period: 60s
 
   pgadmin:
     image: dpage/pgadmin4
@@ -83,11 +84,11 @@ services:
       - REDIS_PORT=6379
       - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
     healthcheck:
-      test: ["CMD", "php", "artisan", "db:monitor", "--timeout=60"]
+      test: ["CMD", "php", "artisan", "db:monitor"]
       interval: 10s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     depends_on:
       db:
         condition: service_healthy
@@ -105,6 +106,12 @@ services:
     restart: unless-stopped
     networks:
       - shared_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 
   record_api:
     build: ./trabalho_final/record-api
@@ -125,6 +132,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 60s
 
 networks:
   shared_network:
