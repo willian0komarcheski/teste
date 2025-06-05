@@ -1,0 +1,9 @@
+> receive-send-api@1.0.0 start
+> node src/server.js
+
+Servidor rodando na porta 3000
+npm error path /usr/src/app
+npm error command failed
+npm error signal SIGTERM
+npm error command sh -c node src/server.js
+npm error A complete log of this run can be found in: /root/.npm/_logs/2025-06-05T19_03_32_095Z-debug-0.log

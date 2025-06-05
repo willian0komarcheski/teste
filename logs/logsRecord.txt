@@ -1,0 +1,7 @@
+[2025-06-05 19:03:32 +0000] [1] [INFO] Starting gunicorn 21.2.0
+[2025-06-05 19:03:32 +0000] [1] [INFO] Listening at: http://0.0.0.0:5001 (1)
+[2025-06-05 19:03:32 +0000] [1] [INFO] Using worker: sync
+[2025-06-05 19:03:32 +0000] [7] [INFO] Booting worker with pid: 7
+[2025-06-05 19:11:15 +0000] [1] [INFO] Handling signal: term
+[2025-06-05 19:11:15 +0000] [7] [INFO] Worker exiting (pid: 7)
+[2025-06-05 19:11:15 +0000] [1] [INFO] Shutting down: Master

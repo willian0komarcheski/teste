@@ -1,0 +1,18 @@
+
+   INFO  Preparing database.  
+
+  Creating migration table ...................................... 15.89ms DONE
+
+   INFO  Running migrations.  
+
+  0001_01_01_000000_create_users_table .......................... 11.61ms DONE
+  2025_06_04_213044_create_personal_access_tokens_table ......... 17.31ms DONE
+
+
+   INFO  Server running on [http://0.0.0.0:8000].  
+
+  Press Ctrl+C to stop the server
+
+  2025-06-05 19:06:16 /api/register ................................ ~ 0.30ms
+  2025-06-05 19:06:27 /api/login ................................. ~ 501.07ms
+  2025-06-05 19:07:27 /api/users ................................... ~ 0.07ms

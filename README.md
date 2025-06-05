@@ -8,7 +8,7 @@ A aplicação é composta pelos seguintes serviços containerizados:
 
 *   `db`: Banco de dados PostgreSQL para persistência de dados.
 *   `redis`: Cache Redis para gerenciamento de sessões ou dados temporários.
-*   `auth-api`: API de autenticação (Laravel/PHP), exposta na porta 8080.
+*   `auth-api`: API de autenticação (Laravel/PHP), exposta na porta 8000.
 *   `receive-send-api`: API para recebimento e envio (Node.js), exposta na porta 3000.
 *   `record-api`: API de gravação (Python/Flask), exposta na porta 5001.
 
@@ -69,7 +69,7 @@ O deploy da aplicação é automatizado pelo script `deploy.sh`.
 ```mermaid
 graph TD
     subgraph "Host Machine"
-        Usuario --> |Porta 8080| AuthAPI
+        Usuario --> |Porta 8000| AuthAPI
         Usuario --> |Porta 3000| ReceiveSendAPI
         Usuario --> |Porta 5001| RecordAPI
     end
@@ -87,7 +87,7 @@ graph TD
 
 **Fluxo:**
 
-1.  O usuário interage com as APIs através das portas expostas no host (`8080`, `3000`, `5001`).
+1.  O usuário interage com as APIs através das portas expostas no host (`8000`, `3000`, `5001`).
 2.  Internamente, na rede Docker criada pelo Compose:
     *   `auth-api` e `record-api` se conectam ao banco de dados `db`.
     *   `receive-send-api` e `record-api` se conectam ao cache `redis`.
@@ -104,7 +104,7 @@ Após a execução bem-sucedida do `deploy.sh`, verifique se a aplicação está
     Todos os serviços devem estar com o status `Up` e, para aqueles com health check, o status de saúde deve ser `(healthy)`.
 
 2.  **Testar Health Checks (se aplicável):**
-    *   **Auth API:** Acesse `http://localhost:8080/` (ou o endpoint de health check específico, se houver) via navegador ou `curl`. O `docker-compose.yml` usa `curl -f http://localhost/` dentro do container.
+    *   **Auth API:** Acesse `http://localhost:8000/` (ou o endpoint de health check específico, se houver) via navegador ou `curl`. O `docker-compose.yml` usa `curl -f http://localhost/` dentro do container.
     *   **Record API:** Acesse `http://localhost:5001/` (ou o endpoint de health check específico) via navegador ou `curl`. O `docker-compose.yml` usa `curl -f http://localhost:5001` dentro do container.
     *   **Receive/Send API:** Embora não tenha um health check explícito no compose, tente acessar `http://localhost:3000/` para verificar se o servidor Node.js está respondendo.
 
@@ -126,8 +126,8 @@ Após a execução bem-sucedida do `deploy.sh`, verifique se a aplicação está
     *   **Solução:** Verifique a saída do build no console ou no log do `deploy.sh`. Analise o `Dockerfile` do serviço que falhou e corrija os erros. Tente construir a imagem manualmente (`docker-compose build <service_name>`) para isolar o problema.
 
 *   **Erro: `Bind for 0.0.0.0:XXXX failed: port is already allocated`**
-    *   **Causa:** Outro processo na máquina host já está usando uma das portas que um container tenta expor (8080, 3000 ou 5001).
-    *   **Solução:** Identifique e pare o processo que está usando a porta (`sudo lsof -i :XXXX` ou `netstat -tulnp | grep XXXX`) ou altere a porta no `docker-compose.yml` (ex: `ports: - "8081:80"`).
+    *   **Causa:** Outro processo na máquina host já está usando uma das portas que um container tenta expor (8000, 3000 ou 5001).
+    *   **Solução:** Identifique e pare o processo que está usando a porta (`sudo lsof -i :XXXX` ou `netstat -tulnp | grep XXXX`) ou altere a porta no `docker-compose.yml` (ex: `ports: - "8001:80"`).
 
 *   **Serviço fica em estado `unhealthy` ou não inicia:**
     *   **Causa:** Erros internos na aplicação do container, falha ao conectar com dependências (db, redis), configuração incorreta.
