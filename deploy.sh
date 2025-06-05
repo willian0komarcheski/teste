@@ -21,7 +21,7 @@ echo "Building images and starting services..."
 docker-compose up -d --build --remove-orphans
 
 echo "Waiting for services with health checks (max wait 120s)..."
-SERVICES_TO_CHECK=("db" "redis" "auth-api" "record-api")
+SERVICES_TO_CHECK=("db" "redis" "auth_api" "record_api" "receive_send_api")
 ALL_HEALTHY=false
 TIMEOUT=120
 INTERVAL=5
