@@ -1,0 +1,137 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:14-alpine
+    container_name: shared_db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - db_data:/var/lib/postgresql/data/pgdata
+      - ./trabalho_final/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - shared_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:latest
+    container_name: shared_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - shared_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    networks:
+      - shared_network
+    depends_on:
+      - db
+
+  auth_api:
+    build:
+      context: ./AuthApi
+      dockerfile: Dockerfile
+    container_name: auth_app
+    restart: unless-stopped
+    working_dir: /var/www
+    ports:
+      - "8000:8000"
+    networks:
+      - shared_network
+    environment:
+      - APP_NAME=AuthApi
+      - APP_ENV=local
+      - APP_KEY=base64:KERoxSGqVkmCHLUjB8/JnHVKq+ZhHEzyEDm7ZCzzx20=
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8000
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=auth_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - CACHE_DRIVER=redis
+      - SESSION_DRIVER=redis
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=null
+      - REDIS_PORT=6379
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+    healthcheck:
+      test: ["CMD", "php", "artisan", "db:monitor", "--timeout=60"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  receive_send_api:
+    build: ./trabalho_final/receive-send-api
+    container_name: receive_send_api
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - shared_network
+
+  record_api:
+    build: ./trabalho_final/record-api
+    container_name: record_api
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "5001:5001"
+    restart: unless-stopped
+    command: ["gunicorn", "--bind", "0.0.0.0:5001", "app:app"]
+    networks:
+      - shared_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  shared_network:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local
+  redis_data:
+    driver: local

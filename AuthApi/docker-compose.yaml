@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_auth_app
+    restart: unless-stopped
+    working_dir: /var/www
+    ports:
+      - "8000:8000"
+    networks:
+      - auth_network
+    environment:
+      - APP_NAME=AuthApi
+      - APP_ENV=local
+      - APP_KEY=base64:KERoxSGqVkmCHLUjB8/JnHVKq+ZhHEzyEDm7ZCzzx20=
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8000
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=auth_db
+      - DB_USERNAME=auth_user
+      - DB_PASSWORD=auth_password
+      - CACHE_DRIVER=redis
+      - SESSION_DRIVER=redis
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=null
+      - REDIS_PORT=6379
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      # - QUEUE_CONNECTION=rabbitmq
+      # - RABBITMQ_HOST=rabbitmq
+      # - RABBITMQ_PORT=5672
+      # - RABBITMQ_USER=guest
+      # - RABBITMQ_PASSWORD=guest
+      # - RABBITMQ_VHOST=/
+    healthcheck:
+      test: ["CMD", "php", "artisan", "db:monitor", "--timeout=60"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  db:
+    image: postgres:14-alpine
+    container_name: laravel_auth_db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - db_data:/var/lib/postgresql/data/pgdata
+    networks:
+      - auth_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_user -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:latest
+    container_name: laravel_auth_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - auth_network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: laravel_auth_pgadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    networks:
+      - auth_network
+    depends_on:
+      - db
+
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   container_name: laravel_auth_rabbitmq
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5672:5672"   
+  #     - "15672:15672" 
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: guest
+  #     RABBITMQ_DEFAULT_PASS: guest
+  #     RABBITMQ_DEFAULT_VHOST: /
+  #   networks:
+  #     - auth_network
+  #   volumes:
+      # - rabbitmq_data:/var/lib/rabbitmq
+
+networks:
+  auth_network:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local
+  redis_data:
+    driver: local
+  # rabbitmq_data:
+  #   driver: local
