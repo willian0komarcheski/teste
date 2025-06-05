@@ -3,7 +3,9 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # "Banco de dados" em memória
-users = {}  # {username: password}
+users = {
+
+}  # {username: password}
 messages = []  # lista de dicts: {from, to, message}
 
 @app.route('/')
@@ -42,8 +44,6 @@ def send_message():
     message = data.get('message')
     if not from_user or not to_user or not message:
         return jsonify({"error": "from, to e message são obrigatórios"}), 400
-    if from_user not in users or to_user not in users:
-        return jsonify({"error": "Usuário remetente ou destinatário não existe"}), 404
     messages.append({"from": from_user, "to": to_user, "message": message})
     return jsonify({"message": "Mensagem enviada com sucesso"}), 201
 

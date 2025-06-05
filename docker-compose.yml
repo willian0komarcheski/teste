@@ -58,7 +58,7 @@ services:
     build:
       context: ./AuthApi
       dockerfile: Dockerfile
-    container_name: auth_app
+    container_name: auth_api
     restart: unless-stopped
     working_dir: /var/www
     ports:
@@ -101,13 +101,20 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      auth_api:
+        condition: service_healthy
+      record_api:
+        condition: service_healthy
+    environment:
+      - AUTH_API_URL=http://auth_api:8000/api
+      - RECORD_API_URL=http://record_api:5001
     ports:
       - "3000:3000"
     restart: unless-stopped
     networks:
       - shared_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 10s
       timeout: 5s
       retries: 5

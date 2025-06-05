@@ -125,38 +125,44 @@ class AuthController extends Controller
 
     public function verifyToken(Request $request)
     {
-        $request->validate([
-            'token' => 'required|string'
-        ]);
+        try {
 
-        $token = PersonalAccessToken::findToken($request->token);
-
-        if (!$token) {
+            $request->validate([
+                'token' => 'required|string'
+            ]);
+    
+            $token = PersonalAccessToken::findToken($request->token);
+    
+            if (!$token) {
+                return response()->json([
+                    'message' => 'Invalid token',
+                    'valid' => false
+                ], 401);
+            }
+    
+            if ($token->expires_at && $token->expires_at->isPast()) {
+            return response()->json(['message' => 'Token is expired'], 401);
+            }
+    
+            $user = $token->tokenable;
+    
+            $user->tokens()->delete();
+    
+            $token = $user->createToken('auth_token', ['*'], now()->addHours(1))->plainTextToken;
+    
+            Cache::put('token_' . $user->email, $token, now()->addHours(1));
+            Cache::put('user_' . $user->email, $user, now()->addHours(2));
+    
             return response()->json([
-                'message' => 'Invalid token',
-                'valid' => false
-            ], 401);
+                'valid' => true,
+                "token" => $token
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred while verifying the token',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        if ($token->expires_at && $token->expires_at->isPast()) {
-        return response()->json(['message' => 'Token is expired'], 401);
-        }
-
-        $user = $token->tokenable;
-
-        $user->tokens()->delete();
-
-        $token = $user->createToken('auth_token', ['*'], now()->addHours(1))->plainTextToken;
-
-        Cache::put('token_' . $user->email, $token, now()->addHours(1));
-        Cache::put('user_' . $user->email, $user, now()->addHours(2));
-
-        return response()->json([
-            'message' => 'Token is valid',
-            'valid' => true,
-            'email' => $user->email,
-            "token" => $token
-        ]);
     }
 
     public function testRedis()
